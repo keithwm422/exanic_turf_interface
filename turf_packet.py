@@ -15,8 +15,8 @@ UDP_WR = b"\x54\x77"  # this is in hex, instead decimal: 21623 # obviously for w
 UDP_TX = b"Tx"  # in hex would be: 0x5478, instead decimal: 21,624
 ENDI = "little"
 UDP_IP = "127.0.0.2"
-ATTEMPT = 2 #  this is the number of times to attempt a connection
-TIMEOUT = 1 #  the time to attempt a connection, written in seconds
+ATTEMPT = 10  #  this is the number of times to attempt a connection
+TIMEOUT = 1  #  the time to attempt a connection, written in seconds
 
 
 class packet:
@@ -124,16 +124,20 @@ class packet:
                 )
 
     def recd(self):
-        self.conn()
-        self.attempt -= 1
-        self.end_time = time.time() + TIMEOUT
+        trial = 0
         while True:
-            if self.is_recv is True:
+            if self.attempt == 0:
+                print("No acknowledgement after {} attempts".format(trial))
                 break
             else:
-                if self.attempt == 0:
-                    print("No acknowledgement after {} attempts".format(ATTEMPT))
-                    break
-                else:
+                print(self.attempt)
+                self.end_time = time.time() + TIMEOUT
+                while time.time() < self.end_time:
                     self.conn()
-                    self.attempt -= 1
+                    trial += 1
+                    if self.is_recv is True:
+                        break
+                self.attempt -= 1
+                if self.is_recv is True:
+                    break
+        print(self.attempt)
