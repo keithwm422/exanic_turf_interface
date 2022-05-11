@@ -1,6 +1,8 @@
 # class for turf packet interface, bytes object is created at initialization, 4 bytes long only or else 4 bytes of all 0.
 # to get just a byte from a bytes object, .,...
 # eventually, need a packet class that expands on this, initializing with zero-filled bytes object of max length: bytes(MAX_LENGTH)
+import socket
+
 ADDR_C = b"\x0F\xFF\xFF\xFF"  # this is a bytes class
 ADDR_bytearray = 0x0FFFFFFF  # this is a bytes ARRAY
 TAG_C = b"\xF0\x00\x00\x00"  # this is a bytes class
@@ -11,7 +13,7 @@ UDP_WR = b"\x54\x77"  # this is in hex, instead decimal: 21623 # obviously for w
 # listen for return packets on the b'Tx' port.
 UDP_TX = b"Tx"  # in hex would be: 0x5478, instead decimal: 21,624
 ENDI = "little"
-
+UDP_IP = "127.0.0.2"
 
 class packet:
     def __init__(
@@ -76,6 +78,8 @@ class packet:
 
     def send_read(self):
         # place holder print of what should be happening once port and all work
+        self.sending_port = 21618
+
         print(
             "reading addr {}, and data should be empty: {}".format(
                 self.address.hex("x"), self.data
@@ -83,6 +87,9 @@ class packet:
         )
 
     def send_write(self):
+        self.sending_port = 21623
+        self.connect()
+
         # place holder print of what should be happening once port and all work
         print(
             "hdr is : x{} \t addr is: x{} \t tag is: x{}".format(
@@ -94,11 +101,11 @@ class packet:
                 self.address.hex("x"), self.data.hex("x")
             )
         )
-        
-   def connect(self): 
+        print("Received: {}".format(self.ack))
+
+    def connect(self): 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((UDP_IP, self.sending_port))
             s.sendto(self.hdr, (UDP_IP, self.sending_port))
             self.ack = s.recv(1024)
             self.ack = self.ack.decode("utf-8")
-
