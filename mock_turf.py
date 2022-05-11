@@ -15,8 +15,8 @@ while True:
     with conn:
         data = conn.recv(1024)  # 1024 bytes --> buffer size
         print("Message from client:", data)
-        ack = random.randrange(0, 10)
-        # ack = 6
+        # ack = random.randrange(0, 10)
+        ack = 6
         print(ack)
         if ack < 5:
             response = "Connection successful"
