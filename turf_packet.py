@@ -2,6 +2,7 @@
 # to get just a byte from a bytes object, .,...
 # eventually, need a packet class that expands on this, initializing with zero-filled bytes object of max length: bytes(MAX_LENGTH)
 import socket
+import time
 
 ADDR_C = b"\x0F\xFF\xFF\xFF"  # this is a bytes class
 ADDR_bytearray = 0x0FFFFFFF  # this is a bytes ARRAY
@@ -14,6 +15,9 @@ UDP_WR = b"\x54\x77"  # this is in hex, instead decimal: 21623 # obviously for w
 UDP_TX = b"Tx"  # in hex would be: 0x5478, instead decimal: 21,624
 ENDI = "little"
 UDP_IP = "127.0.0.2"
+ATTEMPT = 2 #  this is the number of times to attempt a connection
+TIMEOUT = 1 #  the time to attempt a connection, written in seconds
+
 
 class packet:
     def __init__(
@@ -88,7 +92,8 @@ class packet:
 
     def send_write(self):
         self.sending_port = 21623
-        self.connect()
+        self.attempt = ATTEMPT
+        self.recd()
 
         # place holder print of what should be happening once port and all work
         print(
@@ -101,11 +106,34 @@ class packet:
                 self.address.hex("x"), self.data.hex("x")
             )
         )
-        print("Received: {}".format(self.ack))
 
-    def connect(self): 
+    def conn(self):
+        self.is_recv = False
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((UDP_IP, self.sending_port))
             s.sendto(self.hdr, (UDP_IP, self.sending_port))
             self.ack = s.recv(1024)
-            self.ack = self.ack.decode("utf-8")
+            if len(self.ack) != 0:
+                self.is_recv = True
+                self.ack = self.ack.decode("utf-8")
+                print("Received: {}".format(self.ack))
+                print(
+                    "Acknowledged with {} attempt(s)".format(
+                        (ATTEMPT + 1) - self.attempt
+                    )
+                )
+
+    def recd(self):
+        self.conn()
+        self.attempt -= 1
+        self.end_time = time.time() + TIMEOUT
+        while True:
+            if self.is_recv is True:
+                break
+            else:
+                if self.attempt == 0:
+                    print("No acknowledgement after {} attempts".format(ATTEMPT))
+                    break
+                else:
+                    self.conn()
+                    self.attempt -= 1
