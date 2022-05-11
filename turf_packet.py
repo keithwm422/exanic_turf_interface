@@ -94,3 +94,11 @@ class packet:
                 self.address.hex("x"), self.data.hex("x")
             )
         )
+        
+   def connect(self): 
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((UDP_IP, self.sending_port))
+            s.sendto(self.hdr, (UDP_IP, self.sending_port))
+            self.ack = s.recv(1024)
+            self.ack = self.ack.decode("utf-8")
+
