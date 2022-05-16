@@ -8,7 +8,8 @@ import time
 ADDR_C = b"\x0F\xFF\xFF\xFF"  # this is a bytes class
 ADDR_bytearray = 0x0FFFFFFF  # this is a bytes ARRAY
 TAG_C = b"\xF0\x00\x00\x00"  # this is a bytes class
-TAG_bytearray = 0b11110000  # this is a bytes array
+TAG_bytearray = 0b11110000
+READ_bytearray = b"\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"  # this is a bytes array
 # 2 byte ascii are b'Tr' and b'Tw' respectively, these are ports (note difference to addresses in a packet which is sent to a port)
 UDP_RD = b"\x54\x72"  # this is in hex, instead decimal: 21618 # obviously for reads
 UDP_WR = b"\x54\x77"  # this is in hex, instead decimal: 21623 # obviously for writes
@@ -132,14 +133,17 @@ class packet:
 
     def conn(self):
         self.is_recv = False
-        self.s.sendto(self.hdr, (UDP_IP, self.sending_port))
+        if len(self.data) != 0:
+            message = self.data + self.hdr
+            self.s.sendto(message, (UDP_IP, self.sending_port))
+        else:
+            self.s.sendto(self.hdr, (UDP_IP, self.sending_port))
         try:
-            self.ack, address = self.s.recvfrom(1024)
+            self.ack, _ = self.s.recvfrom(1024)
         except Exception:
             self.ack = ""
         if len(self.ack) != 0:
             self.is_recv = True
-            self.ack = self.ack.decode("utf-8")
             print("Received: {}".format(self.ack))
             print(
                 "Acknowledged after {} attempt(s)".format((ATTEMPT + 1) - self.attempt)
