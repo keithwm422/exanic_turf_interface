@@ -1,10 +1,6 @@
 import sfc_interface
 
 
-MY_IP = "127.0.0.1"
-MY_PORT = 21347
-
-
 
 msg = b"\x12\x55\xB1\xA5"  # Bits 31:28 are tag, 27:0 are address
 data = b"\x15\x26\x37\x48"
