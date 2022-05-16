@@ -20,8 +20,6 @@ while True:
                 print("Message from client: {}".format(data))
             if len(data) != 0 and quit != data:
                 ack = random.randrange(0, 10)
-                #ack = 6
-                print(ack)
                 if ack < 5:
                     response = "Connection successful"
                     conn.send(response.encode("utf-8"))
