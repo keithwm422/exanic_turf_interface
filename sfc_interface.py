@@ -15,8 +15,8 @@ UDP_WR = b"\x54\x77"  # this is in hex, instead decimal: 21623 # obviously for w
 UDP_TX = b"Tx"  # in hex would be: 0x5478, instead decimal: 21,624
 ENDI = "little"
 UDP_IP = "127.0.0.2"
-ATTEMPT = 1  #  this is the number of times to attempt a connection
-TIMEOUT = 10  #  the time to attempt a connection, written in seconds
+ATTEMPT = 2  #  this is the number of times to attempt a connection
+TIMEOUT = 1  #  the time to attempt a connection, written in seconds
 
 MY_IP = "127.0.0.1"
 MY_PORT = 21347
@@ -111,52 +111,41 @@ class packet:
         )
 
     def recd(self):
-        self.trial = 1
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.settimeout(0.1)
+        self.s.settimeout(TIMEOUT)
         self.s.bind((MY_IP, MY_PORT))
         self.s.connect((UDP_IP, self.sending_port))
         cont = True
         while cont is True:
             if self.attempt == 0:
-                print(
-                    "No acknowledgement after {} attempts with {} trials".format(
-                        ATTEMPT, self.trial
-                    )
-                )
+                print("No acknowledgement after {} attempts".format(ATTEMPT))
                 self.quit()
                 cont = False
             else:
-                self.end_time = time.time() + TIMEOUT
-                while time.time() <= self.end_time:
-                    self.conn()
-                    if self.is_recv is True: # you dont need this
-                        self.quit()
-                        cont = False
-                        break
-                    self.trial += 1
+                self.conn()
+                if self.is_recv is True:  # you dont need this
+                    self.quit()
+                    cont = False
+                    break
                 self.attempt -= 1
-                    
-                    
 
     def conn(self):
         self.is_recv = False
         self.s.sendto(self.hdr, (UDP_IP, self.sending_port))
-        try : 
+        try:
             self.ack = self.s.recv(1024)
         except:
-            self.ack = ''
+            self.ack = ""
         if len(self.ack) != 0:
             self.is_recv = True
             self.ack = self.ack.decode("utf-8")
             print("Received: {}".format(self.ack))
             print(
-                "Acknowledged on attempt {} with {} trials".format(
-                    (ATTEMPT + 1) - self.attempt, self.trial
-                )
+                "Acknowledged after {} attempt(s)".format((ATTEMPT + 1) - self.attempt)
             )
-    
-    def quit(self): 
+
+    def quit(self):
         message = "q"
         self.nmessage = message.encode()
         self.s.sendto(self.nmessage, (UDP_IP, self.sending_port))
+
