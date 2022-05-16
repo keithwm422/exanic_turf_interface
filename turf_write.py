@@ -21,8 +21,8 @@ while True:
             ack = random.randrange(0, 10)
             # ack = 4
             if ack < 5:
-                response = "Connection successful"
-                s.sendto(response.encode("utf-8"), addr)
+                response = data
+                s.sendto(response, addr)
         elif len(data) != 0 and quit == data:
             print("Connection by {} lost".format(addr))
             print()
