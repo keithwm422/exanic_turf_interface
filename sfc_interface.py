@@ -134,7 +134,7 @@ class packet:
         self.s.sendto(self.hdr, (UDP_IP, self.sending_port))
         try:
             self.ack = self.s.recv(1024)
-        except:
+        except Exception:
             self.ack = ""
         if len(self.ack) != 0:
             self.is_recv = True
