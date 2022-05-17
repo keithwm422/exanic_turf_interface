@@ -84,22 +84,24 @@ class packet:
         )  # connect to the correct port
         while True:
             if self.attempt == 0:  # if you finish an alloted amount of attempts
-                # self.quit() # sends a quit message to server
                 break
             else:
                 self.conn()
                 if self.is_recv is True:
-                    # self.quit()
                     break
                 self.attempt -= 1
 
+    def little_end(self):
+        self.hdr_rev = (socket.htonl(int.from_bytes(self.hdr, 'little'))).to_bytes(len(self.hdr), 'little')
+
     def conn(self):
         self.is_recv = False  # indicates whether a response has been received
-        if len(self.data) != 0:  # if read request
-            message = self.data + self.hdr
-            self.control_sock.sendto(message, (UDP_IP, self.sending_port))
+        if len(self.data) != 0:  # if write request
+            self.message = self.data + self.hdr
+            self.control_sock.sendto(self.message, (UDP_IP, self.sending_port))
         else:
-            self.control_sock.sendto(self.hdr, (UDP_IP, self.sending_port))
+            self.little_end()
+            self.control_sock.sendto(self.hdr_rev, (UDP_IP, self.sending_port))
         try:  # attempts to receive a response
             # if a response is received, save value
             self.ack, _ = self.control_sock.recvfrom(
@@ -110,16 +112,12 @@ class packet:
             self.ack = (
                 ""  # if no response is received, indicate there wasn't a response
             )
-
-    def quit(self):  # most likely not required because this needs a specific
-        # server set up --> sends quit message
-        message = "q"
-        self.nmessage = message.encode()
-        self.control_sock.sendto(self.nmessage, (UDP_IP, self.sending_port))
+    
+    
 
     def print_ack(self):  # prints what is send back from the server
         if self.is_recv is True:
-            print("Received: {}".format(self.ack))
+            print("Received: {}".format(self.ack.hex("x")))
             print(
                 "Acknowledged after {} attempt(s)".format((ATTEMPT + 1) - self.attempt)
             )
@@ -164,4 +162,3 @@ class packet:
             else:
                 self.print_rd()
                 self.print_ack()
-
