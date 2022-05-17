@@ -3,7 +3,6 @@
 # eventually, need a packet class that expands on this, initializing with zero-filled bytes object of max length: bytes(MAX_LENGTH)
 from ctypes import addressof
 import socket
-import time
 
 ADDR_C = b"\x0F\xFF\xFF\xFF"  # this is a bytes class
 ADDR_bytearray = 0x0FFFFFFF  # this is a bytes ARRAY
@@ -69,47 +68,19 @@ class packet:
             print("Bad packet format")
         else:
             if self.is_read is False:
-                print(
-                    "hdr is : x{} \t addr is: x{} \t tag is: x{} \t data is: {}".format(
-                        self.hdr.hex("x"),
-                        self.address.hex("x"),
-                        self.tag.hex("x"),
-                        self.data.hex("x"),
-                    )
-                )
+                self.print_wr()
+                self.print_ack()
             else:
-                print(
-                    "hdr is : x{} \t addr is: x{} \t tag is: x{} \t data is: {}".format(
-                        self.hdr.hex("x"),
-                        self.address.hex("x"),
-                        self.tag.hex("x"),
-                        self.data,
-                    )
-                )
+                self.print_rd()
+                self.print_ack()
 
     def send_read(self):
         self.sending_port = 21618
         self.recd()
-        print(
-            "reading addr {}, and data should be empty: {}".format(
-                self.address.hex("x"), self.data
-            )
-        )
 
     def send_write(self):
         self.sending_port = 21623
         self.recd()
-
-        print(
-            "hdr is : x{} \t addr is: x{} \t tag is: x{}".format(
-                self.hdr.hex("x"), self.address.hex("x"), self.tag.hex("x")
-            )
-        )
-        print(
-            "writing addr {}, with data: {}".format(
-                self.address.hex("x"), self.data.hex("x")
-            )
-        )
 
     def recd(self):
         self.s = s
@@ -121,7 +92,6 @@ class packet:
         self.s.connect((UDP_IP, self.sending_port))  # connect to the correct port
         while True:
             if self.attempt == 0:  # if you finish an alloted amount of attempts
-                print("No acknowledgement after {} attempts".format(ATTEMPT))
                 self.quit()  # comment out to not close the connection between client and server
                 break
             else:
@@ -144,12 +114,45 @@ class packet:
             self.ack = ""
         if len(self.ack) != 0:
             self.is_recv = True
-            print("Received: {}".format(self.ack))
-            print(
-                "Acknowledged after {} attempt(s)".format((ATTEMPT + 1) - self.attempt)
-            )
 
     def quit(self):
         message = "q"
         self.nmessage = message.encode()
         self.s.sendto(self.nmessage, (UDP_IP, self.sending_port))
+
+    def print_ack(self):
+        if self.is_recv is True:
+            print("Received: {}".format(self.ack))
+            print(
+                "Acknowledged after {} attempt(s)".format((ATTEMPT + 1) - self.attempt)
+            )
+        else:
+            print("No acknowledgement after {} attempts".format(ATTEMPT))
+
+    def print_rd(self):
+        print(
+            "reading addr {}, and data should be empty: {}".format(
+                self.address.hex("x"), self.data
+            )
+        )
+        print(
+            "hdr is : x{} \t addr is: x{} \t tag is: x{} \t data is: {}".format(
+                self.hdr.hex("x"),
+                self.address.hex("x"),
+                self.tag.hex("x"),
+                self.data,
+            )
+        )
+
+    def print_wr(self):
+        print(
+            "writing addr {}, with data: {}".format(
+                self.address.hex("x"), self.data.hex("x")
+            )
+        )
+        print(
+            "hdr is : x{} \t addr is: x{} \t tag is: x{}".format(
+                self.hdr.hex("x"), self.address.hex("x"), self.tag.hex("x")
+            )
+        )
+
