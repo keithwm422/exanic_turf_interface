@@ -17,7 +17,7 @@ UDP_TX = b"Tx"  # in hex would be: 0x5478, instead decimal: 21,624
 ENDI = "little"
 UDP_IP = "127.0.0.3"
 
-ATTEMPT = 2  #  this is the number of times to attempt a connection
+ATTEMPT = 1  #  this is the number of times to attempt a connection
 TIMEOUT = 1  #  the time to wait for a response, written in seconds
 
 MY_IP = "127.0.0.1"
@@ -153,6 +153,7 @@ class packet:
             )
         )
 
+
     def print_all(self):  # prints everything in print_rd(), print_wr(), print_ack()
         if self.is_badPacket is True:
             print("Bad packet format")
@@ -163,5 +164,3 @@ class packet:
             else:
                 self.print_rd()
                 self.print_ack()
-
-
