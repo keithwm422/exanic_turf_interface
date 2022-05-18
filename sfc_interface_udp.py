@@ -19,10 +19,10 @@ UDP_TX = b"Tx"  # in hex would be: 0x5478, instead decimal: 21,624
 ENDI = "little"
 UDP_IP = "127.0.0.3"
 
-ATTEMPT = 5 #  this is the number of times to attempt a connection
+ATTEMPT = 5  #  this is the number of times to attempt a connection
 TIMEOUT = 1  #  the time to wait for a response, written in seconds
 
-MY_IP = "127.0.0.1" # CHANGEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+MY_IP = "127.0.0.1"  # CHANGEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 MY_PORT = 21347
 
 cs = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # create a control socket
@@ -97,53 +97,40 @@ class packet:
         self.is_recv = False  # indicates whether a response has been received
         if self.is_read is False:  # if write request
             self.message = self.data + self.hdr
-            print('WRITE MESSAGE', self.message.hex('x'))
             self.little_end()
-            print('REVVVV MESSAGE', self.message_rev.hex('x'))
             self.control_sock.sendto(self.message_rev, (UDP_IP, self.sending_port))
         else:
-            print(type(self.hdr), type(self.data))
-             # self.message = self.data + self.hdr
             self.message = self.hdr
             self.little_end()
             self.control_sock.sendto(self.message_rev, (UDP_IP, self.sending_port))
         try:  # attempts to receive a response
             # if a response is received, save value
-            self.ack, _ = self.control_sock.recvfrom(
+            self.message, _ = self.control_sock.recvfrom(
                 1024
             )  # can format to save returning address
+            self.little_end()
+            self.ack = self.message_rev
             self.is_recv = True
-            print('rec info!!!!!!!!', self.ack.hex('x'))
         except Exception:
             self.ack = (
                 ""  # if no response is received, indicate there wasn't a response
             )
 
-    def little_end(self): 
-        self.message_rev = self.message[::-1]
-    """
     def little_end(self):
-        if self.is_read is False : # if write request
-            data_rev = (socket.htonl(int.from_bytes(self.data, ENDI))).to_bytes(len(self.data), ENDI)
-            headr_rev = (socket.htonl(int.from_bytes(self.hdr, ENDI))).to_bytes(len(self.hdr), ENDI)
-            self.message_rev = headr_rev + data_rev
-        else: 
-            self.message_rev = (socket.htonl(int.from_bytes(self.hdr, ENDI))).to_bytes(len(self.hdr), ENDI)
-            self.reversed_data = self.ack[::-1]
-    """
+        self.message_rev = self.message[::-1]
+
     def print_ack(self):  # prints what is send back from the server
         if self.is_recv is True:
             print("Received: {}".format(self.ack.hex("x")))
             print(
                 "Acknowledged after {} attempt(s)".format((ATTEMPT + 1) - self.attempt)
             )
-            
-            # print('YOOOOOOOOOOOOOOOOOOOOO', reversed_data.hex("x"))
-            self.recdata = (int.from_bytes(self.ack, ENDI) & int.from_bytes(RECDATA, ENDI)
+            self.recdata = (
+                int.from_bytes(self.ack, ENDI) & int.from_bytes(RECDATA, ENDI)
             ).to_bytes((len(self.ack)), ENDI)
-            self.rechdr = (int.from_bytes(self.ack, ENDI) & int.from_bytes(RECHDR, ENDI)
+            self.rechdr = (
+                int.from_bytes(self.ack, ENDI) & int.from_bytes(RECHDR, ENDI)
             ).to_bytes((len(self.ack)), ENDI)
-            print('HHHHHHHHHHHELP', self.recdata.hex("x"), self.rechdr.hex("x"))
         else:
             print("No acknowledgement after {} attempts".format(ATTEMPT))
 
@@ -173,7 +160,6 @@ class packet:
                 self.hdr.hex("x"), self.address.hex("x"), self.tag.hex("x")
             )
         )
-
 
     def print_all(self):  # prints everything in print_rd(), print_wr(), print_ack()
         if self.is_badPacket is True:
