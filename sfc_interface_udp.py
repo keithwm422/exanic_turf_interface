@@ -3,12 +3,17 @@
 # eventually, need a packet class that expands on this, initializing with zero-filled bytes object of max length: bytes(MAX_LENGTH)
 import socket
 
+# Constants for sending
 ADDR_C = b"\x0F\xFF\xFF\xFF"  # this is a bytes class
 ADDR_bytearray = 0x0FFFFFFF  # this is a bytes ARRAY
 TAG_C = b"\xF0\x00\x00\x00"  # this is a bytes class
 TAG_bytearray = 0b11110000  # this is a bytes class ARRAY
-RECDATA = b"\x00\x00\x00\x00\xFF\xFF\xFF\xFF"
-RECHDR = b"\xFF\xFF\xFF\xFF\x00\x00\x00\x00"
+
+# Constans for receiving
+TAG_REC = b"\x00\x00\x00\x00\xF0\x00\x00\x00"
+ADDR_REC = b"\x00\x00\x00\x00\x0F\xFF\xFF\xFF"
+DATA_REC = b"\xFF\xFF\xFF\xFF\x00\x00\x00\x00"
+DATA_REC_bytearray = 0xFFFFFFFF
 
 # 2 byte ascii are b'Tr' and b'Tw' respectively, these are ports (note difference to addresses in a packet which is sent to a port)
 UDP_RD = b"\x54\x72"  # this is in hex, instead decimal: 21618 # obviously for reads
@@ -17,12 +22,12 @@ UDP_WR = b"\x54\x77"  # this is in hex, instead decimal: 21623 # obviously for w
 # listen for return packets on the b'Tx' port.
 UDP_TX = b"Tx"  # in hex would be: 0x5478, instead decimal: 21,624
 ENDI = "little"
-UDP_IP = "127.0.0.3"
+UDP_IP = "192.168.1.128"
 
 ATTEMPT = 5  #  this is the number of times to attempt a connection
 TIMEOUT = 1  #  the time to wait for a response, written in seconds
 
-MY_IP = "127.0.0.1"  # CHANGEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+MY_IP = "192.168.1.1" 
 MY_PORT = 21347
 
 cs = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # create a control socket
@@ -110,6 +115,7 @@ class packet:
             )  # can format to save returning address
             self.little_end()
             self.ack = self.message_rev
+            self.recd_parser()
             self.is_recv = True
         except Exception:
             self.ack = (
@@ -125,12 +131,7 @@ class packet:
             print(
                 "Acknowledged after {} attempt(s)".format((ATTEMPT + 1) - self.attempt)
             )
-            self.recdata = (
-                int.from_bytes(self.ack, ENDI) & int.from_bytes(RECDATA, ENDI)
-            ).to_bytes((len(self.ack)), ENDI)
-            self.rechdr = (
-                int.from_bytes(self.ack, ENDI) & int.from_bytes(RECHDR, ENDI)
-            ).to_bytes((len(self.ack)), ENDI)
+
         else:
             print("No acknowledgement after {} attempts".format(ATTEMPT))
 
@@ -171,3 +172,42 @@ class packet:
             else:
                 self.print_rd()
                 self.print_ack()
+
+    def recd_parser(
+        self,
+    ):  # parser for received data from the TURF, will be 64 bits regardless of read/write
+        self.bytestr = self.ack
+
+        self.bytecomp = DATA_REC
+        self.general_parser()
+        self.recdata = self.parseddata
+
+        self.data32bitrecd = (
+            (self.recdata[0] << 24)
+            | (self.recdata[1] << 16)
+            | (self.recdata[2] << 8)
+            | self.recdata[3]
+        ) & DATA_REC_bytearray
+
+        self.bytecomp = TAG_REC
+        self.general_parser()
+        self.rectag = self.parseddata
+
+        self.tag4bitrecd = self.rectag[4] & TAG_bytearray
+
+        self.bytecomp = ADDR_REC
+        self.general_parser()
+        self.recaddr = self.parseddata
+
+        self.addr28bitrecd = (
+            (self.recaddr[4]) << 24
+            | (self.recaddr[5] << 16)
+            | (self.recaddr[6] << 8)
+            | self.recaddr[7]
+        ) & ADDR_bytearray
+
+    def general_parser(self):
+        self.parseddata = (
+            int.from_bytes(self.bytestr, ENDI) & int.from_bytes(self.bytecomp, ENDI)
+        ).to_bytes((len(self.bytestr)), ENDI)
+
