@@ -9,7 +9,7 @@ ADDR_bytearray = 0x0FFFFFFF  # this is a bytes ARRAY
 TAG_C = b"\xF0\x00\x00\x00"  # this is a bytes class
 TAG_bytearray = 0b11110000  # this is a bytes class ARRAY
 
-# Constans for receiving
+# Constants for receiving
 TAG_REC = b"\x00\x00\x00\x00\xF0\x00\x00\x00"
 ADDR_REC = b"\x00\x00\x00\x00\x0F\xFF\xFF\xFF"
 DATA_REC = b"\xFF\xFF\xFF\xFF\x00\x00\x00\x00"
