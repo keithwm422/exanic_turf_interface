@@ -11,11 +11,11 @@ while True:
     while True:
         data, addr = s.recvfrom(1024)
         print(f"Connected by {addr}")
-        print("Message from client: {}".format(data))
+        print("Message from client: {}".format(data.hex("x")))
         print()
         # ack = random.randrange(0, 10)
-        ack = 6
+        ack = 4
         if ack < 5:
-            response = b'\x00\x00\x00\x00' + data
+            response = data + b'\x11\x12\x14\x15' 
             s.sendto(response, addr)
        
