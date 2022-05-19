@@ -43,17 +43,15 @@ class packetparser:
     def addr1(self):  # DATEVERSION [31:0]
         self.dateversion = "{:032b}".format(int(self.data))
         self.dateparser()
+
         print(
             "The latest firmware version is {}.{}.{}".format(
                 self.major, self.minor, self.revision
             )
         )
         print(
-            "Last revised on {} {}, 20{}".format(
-                MONTH[self.month], self.day, self.year
-            )
+            "Last revised on {} {}, 20{}".format(MONTH[self.month], self.day, self.year)
         )
-        
 
     def hexconv(self):
         self.addr = hex(self.addr)
@@ -61,29 +59,28 @@ class packetparser:
         self.tag = hex(self.tag)
 
     def dateparser(self):
-        self.dateval = self.dateversion[0:7]
-        self.bintodate()
-        self.year = self.bintotal
-        self.dateval = self.dateversion[7:11]
-        self.bintodate()
-        self.month = self.bintotal
-        self.dateval = self.dateversion[11:16]
-        self.bintodate()
-        self.day = self.bintotal
-        self.dateval = self.dateversion[16:20]
-        self.bintodate()
-        self.major = self.bintotal
-        self.dateval = self.dateversion[20:24]
-        self.bintodate()
-        self.minor = self.bintotal
-        self.dateval = self.dateversion[24:32]
-        self.bintodate()
-        self.revision = self.bintotal
+        self.dateverval = [
+            self.dateversion[0:7],
+            self.dateversion[7:11],
+            self.dateversion[11:16],
+            self.dateversion[16:20],
+            self.dateversion[20:24],
+            self.dateversion[24:32],
+        ]
 
-    def bintodate(self):
+        for iter in range(len(self.dateverval)):
+            self.binval = self.dateverval[iter]
+            self.bintoint()
+            self.dateverval[iter] = self.bintotal
+
+        self.year, self.month, self.day, self.major, self.minor, self.revision = map(
+            int, self.dateverval
+        )
+
+    def bintoint(self):
         self.bintotal = 0
         expo = 0
-        for i in range(len(self.dateval) - 1, -1, -1):
-            if int(self.dateval[i]) == 1:
+        for i in range(len(self.binval) - 1, -1, -1):
+            if int(self.binval[i]) == 1:
                 self.bintotal += 2 ** expo
             expo += 1
