@@ -31,17 +31,19 @@ class packetparser:
         self.addr = addr
 
         if hex(self.addr) == "0x0":
-            self.addr0()
+            self.ident()
         elif hex(self.addr) == "0x1":
-            self.addr1()
+            self.dateversion()
+        elif hex(self.addr) == "0x2":
+            self.control()
 
-    def addr0(self):  # IDENT [31:0]
+    def ident(self):  # IDENT [31:0]
         self.hexconv()
         self.identity = TURF_IDS[self.data]
         print("Address returned: {}, ID: {}".format(self.addr, self.identity))
 
-    def addr1(self):  # DATEVERSION [31:0]
-        self.dateversion = "{:032b}".format(int(self.data))
+    def dateversion(self):  # DATEVERSION [31:0]
+        self.datevers = "{:032b}".format(int(self.data))
         self.dateparser()
 
         print(
@@ -53,6 +55,9 @@ class packetparser:
             "Last revised on {} {}, 20{}".format(MONTH[self.month], self.day, self.year)
         )
 
+    def control(self):
+        print()
+
     def hexconv(self):
         self.addr = hex(self.addr)
         self.data = hex(self.data)
@@ -60,12 +65,12 @@ class packetparser:
 
     def dateparser(self):
         self.dateverval = [
-            self.dateversion[0:7],
-            self.dateversion[7:11],
-            self.dateversion[11:16],
-            self.dateversion[16:20],
-            self.dateversion[20:24],
-            self.dateversion[24:32],
+            self.datevers[0:7],
+            self.datevers[7:11],
+            self.datevers[11:16],
+            self.datevers[16:20],
+            self.datevers[20:24],
+            self.datevers[24:32],
         ]
 
         for iter in range(len(self.dateverval)):
